@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Примитивный редактор табличных данных</title>
+  </head>
+  <body>
+    <h1>Примитивный редактор табличных данных</h1>
+    <p>Введите данные в формате JSON и нажмите "Загрузить данные"</p>
+    <textarea id="jsonData" rows="10" cols="50"></textarea><br />
+    <button onclick="loadData()">Загрузить данные</button><br /><br />
+
+    <table id="tableData">
+      <thead>
+        <tr>
+          <th>Имя</th>
+          <th>Значение</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <br />
+
+    <button onclick="addRow()">Добавить запись</button>
+    <button onclick="saveData()">Сохранить</button><br /><br />
+
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+      }
+      table {
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+      th,
+      td {
+        padding: 8px;
+        border: 1px solid #ddd;
+      }
+      th {
+        background-color: #f2f2f2;
+        text-align: left;
+      }
+      th:last-child,
+      td:last-child {
+        text-align: center;
+      }
+      input[type="text"] {
+        width: 100%;
+        padding: 6px;
+        margin: 5px 0;
+        box-sizing: border-box;
+        border: 2px solid #ccc;
+        border-radius: 4px;
+      }
+      button {
+        background-color: #4c77af;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        cursor: pointer;
+        margin-right: 10px;
+      }
+      button:hover {
+        background-color: #4597a0;
+      }
+    </style>
+
+    <script>
+      let data = [{"name":"Имя1","value":"Значение1"},{"name":"Имя2","value":"Значение2"},{"name":"Имя3","value":"Значение3"},{"name":"Имя4","value":"Значение4"}];
+      renderTable()
+      function loadData() {
+        const jsonData = document.getElementById("jsonData").value;
+        try {
+          data = JSON.parse(jsonData);
+          renderTable();
+        } catch (error) {
+          alert("Ошибка загрузки данных: некорректный формат JSON");
+        }
+      }
+
+      function saveData() {
+        const jsonData = JSON.stringify(data);
+        document.getElementById("jsonData").value = jsonData;
+      }
+
+      function addRow() {
+        const tableBody = document.querySelector("#tableData tbody");
+        const newRow = tableBody.insertRow(-1);
+        newRow.innerHTML = `
+        <td contenteditable="true"></td>
+        <td contenteditable="true"></td>
+        <td>
+          <button onclick="deleteRow(this)">Удалить</button>
+          <button onclick="moveRowUp(this)">&#8593</button>
+          <button onclick="moveRowDown(this)">&#8595</button>
+        </td>
+      `;
+        data.push({ name: "", value: "" });
+      }
+
+      function deleteRow(button) {
+        const row = button.closest("tr");
+        const rowIndex = row.rowIndex - 1;
+        data.splice(rowIndex, 1);
+        row.remove();
+      }
+
+      function renderTable() {
+        const tableBody = document.querySelector("#tableData tbody");
+        tableBody.innerHTML = "";
+        for (let i = 0; i < data.length; i++) {
+          const row = tableBody.insertRow(-1);
+          row.innerHTML = `
+          <td contenteditable="true">${data[i].name}</td>
+          <td contenteditable="true">${data[i].value}</td>
+          <td>
+            <button onclick="deleteRow(this)">Удалить</button>
+            <button onclick="moveRowUp(this)">&#8593</button>
+            <button onclick="moveRowDown(this)">&#8595</button>
+          </td>
+        `;
+        }
+      }
+
+      function updateData() {
+        const tableRows = document.querySelectorAll("#tableData tbody tr");
+        for (let i = 0; i < tableRows.length; i++) {
+          const name = tableRows[i].cells[0].textContent;
+          const value = tableRows[i].cells[1].textContent;
+          data[i].name = name;
+          data[i].value = value;
+        }
+      }
+
+      function moveRowUp(button) {
+        const row = button.closest("tr");
+        const rowIndex = row.rowIndex - 1;
+        if (rowIndex > 0) {
+          const temp = data[rowIndex];
+          data[rowIndex] = data[rowIndex - 1];
+          data[rowIndex - 1] = temp;
+          const tableBody = document.querySelector("#tableData tbody");
+          tableBody.insertBefore(row, row.previousSibling);
+        }
+      }
+
+      function moveRowDown(button) {
+        const row = button.closest("tr");
+        const rowIndex = row.rowIndex - 1;
+        if (rowIndex < data.length - 1) {
+          const temp = data[rowIndex];
+          data[rowIndex] = data[rowIndex + 1];
+          data[rowIndex + 1] = temp;
+          const tableBody = document.querySelector("#tableData tbody");
+          tableBody.insertBefore(row.nextSibling, row);
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        document
+          .querySelector("#tableData tbody")
+          .addEventListener("input", updateData);
+      });
+    </script>
+  </body>
+</html>
